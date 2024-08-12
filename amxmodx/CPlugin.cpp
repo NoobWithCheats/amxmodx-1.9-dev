@@ -228,34 +228,34 @@ bool CPluginMngr::SearchPluginInFile(const char* filename, char* name, int debug
 
 bool CPluginMngr::registerPlugin(CPlugin* pPlugin, char* error, char* pluginName)
 {
-	if (plugin->getStatusCode() == ps_bad_load)
+	if (pPlugin->getStatusCode() == ps_bad_load)
 	{
 		char errorMsg[255];
 		sprintf(errorMsg, "%s (plugin \"%s\")", error, pluginName);
-		plugin->setError(errorMsg);
-		AMXXLOG_Error("[AMXX] %s", plugin->getError());
-		return true;
+		pPlugin->setError(errorMsg);
+		AMXXLOG_Error("[AMXX] %s", pPlugin->getError());
+		return false;
 	}
 	else
 	{
 		cell addr;
-		if (amx_FindPubVar(plugin->getAMX(), "MaxClients", &addr) != AMX_ERR_NOTFOUND)
+		if (amx_FindPubVar(pPlugin->getAMX(), "MaxClients", &addr) != AMX_ERR_NOTFOUND)
 		{
-			*get_amxaddr(plugin->getAMX(), addr) = gpGlobals->maxClients;
+			*get_amxaddr(pPlugin->getAMX(), addr) = gpGlobals->maxClients;
 		}
 
-		if (amx_FindPubVar(plugin->getAMX(), "NULL_STRING", &addr) != AMX_ERR_NOTFOUND)
+		if (amx_FindPubVar(pPlugin->getAMX(), "NULL_STRING", &addr) != AMX_ERR_NOTFOUND)
 		{
-			plugin->m_pNullStringOfs = get_amxaddr(plugin->getAMX(), addr);
+			pPlugin->m_pNullStringOfs = get_amxaddr(pPlugin->getAMX(), addr);
 		}
 
-		if (amx_FindPubVar(plugin->getAMX(), "NULL_VECTOR", &addr) != AMX_ERR_NOTFOUND)
+		if (amx_FindPubVar(pPlugin->getAMX(), "NULL_VECTOR", &addr) != AMX_ERR_NOTFOUND)
 		{
-			plugin->m_pNullVectorOfs = get_amxaddr(plugin->getAMX(), addr);
+			pPlugin->m_pNullVectorOfs = get_amxaddr(pPlugin->getAMX(), addr);
 		}
 	}
 
-	return false;
+	return true;
 }
 
 int CPluginMngr::loadPluginsFromFile(const char* filename, bool warn)

@@ -4664,6 +4664,43 @@ static cell AMX_NATIVE_CALL RequestFrame(AMX *amx, cell *params)
 	return 1;
 }
 
+static cell AMX_NATIVE_CALL reload_plugin_id(AMX *amx, cell *params)
+{					// *amx  char size_t   
+	enum {arg_count, arg_id, arg_string};
+	// MF_GetScriptAmx получим amx поинтер
+	// перед выгрузкой получить имя плагина!
+
+	if (params[arg_id] < 0)
+	{
+		// TODO: сделать так, чтоб мы просто вызывали другой натив для этого
+		return false;
+	}
+	
+	CPluginMngr::CPlugin *pPlugin = g_plugins.findPlugin((int)params[arg_id]);		// получили amx поинтер плагина
+	AMX *pAmx = pPlugin->getAMX();
+
+	if (amx == pAmx)	// мы не можем перезагрузить этот же плагин. Есть специальная функция для этого
+	{
+		// TODO: сделать так, чтоб мы просто вызывали другой натив для этого
+		return false;
+	}
+	
+	if (g_plugins.reloadPlugin(pPlugin))
+	{
+		// INFO: плагин успешно загружен
+		return true;
+	}
+
+	/**
+	 * // INFO: Плагин не загружен по одной из причин:
+	 * 1) Плагин не активен в plugins.ini или в другом plugins-*.ini
+	 * 2) Плагин не загрузился в память
+	 */ 
+	
+
+	return false;
+}
+
 AMX_NATIVE_INFO amxmodx_Natives[] =
 {
 	{"abort",					amx_abort},
@@ -4859,5 +4896,6 @@ AMX_NATIVE_INFO amxmodx_Natives[] =
 	{"ShowSyncHudMsg",			ShowSyncHudMsg},
 	{"AutoExecConfig",			AutoExecConfig},
 	{"RequestFrame",			RequestFrame},
+	{"reload_plugin_id",		reload_plugin_id},
 	{NULL,						NULL}
 };

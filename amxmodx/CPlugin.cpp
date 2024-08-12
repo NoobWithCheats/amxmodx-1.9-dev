@@ -77,7 +77,7 @@ bool CPluginMngr::reloadPlugin(CPlugin* a)
 
 	if (unload_amxscript(amx, &code) != AMX_ERR_NONE); // TODO ссылка в ссылке. выгрузка плаигна с Сервера
 	{
-		AMXXLOG_Error("[AMXX] Plugin \"%s\" could not be unloaded from memory", pluginName);
+		LogError("[AMXX] Plugin \"%s\" could not be unloaded from memory", pluginName);
 		// ошибка, не удалось выгрузить код плагина с памяти, но самого плагина нет
 	}
 	// выгружает плагин из нашего реестра

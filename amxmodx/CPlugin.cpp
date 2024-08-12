@@ -59,6 +59,205 @@ void CPluginMngr::Finalize()
 	m_Finalized = true;
 }
 
+bool CPluginMngr::reloadPlugin(CPlugin* a)
+{
+	char pluginName[256]; // TODO: надо записать, но функция получает только при const char
+	void* code = a->getCode();
+	AMX* amx = a->getAMX();
+	ke::SafeSprintf(pluginName, sizeof(pluginName), "%s", a->getName());
+	// если program (2-й арг) 0, то мы не освободим память, выделянную под плагин. опасно ли это? обновится ли наш плагин после этого?
+
+	if (unload_amxscript(amx, &code) != AMX_ERR_NONE); // TODO ссылка в ссылке. выгрузка плаигна с Сервера
+	{
+		AMXXLOG_Error("[AMXX] Plugin \"%s\" could not be unloaded from memory", pluginName);
+		// ошибка, не удалось выгрузить код плагина с памяти, но самого плагина нет
+	}
+	// выгружает плагин из нашего реестра
+	unloadPlugin(a); //TODO: ссылка в ссылке
+	int debugFlag;
+
+	// проверка, что плагин активен в plugins.ini или других plugins-*.ini
+	if (!SearchPluginInFile(get_localinfo("amxx_configsdir", "addons/amxmodx/configs/plugins.ini"), pluginName, debugFlag))
+	{
+		if (!SearchPluginOtherFile(pluginName, debugFlag))
+		{
+			// плагин не найден. Проверьте plugins.ini
+			return false;
+		}
+	}
+
+	char error[256];
+
+	CPlugin* pPlugin = loadPlugin(get_localinfo("amxx_pluginsdir", "addons/amxmodx/plugins"), pluginName, error, sizeof(error), debugFlag);
+		
+	// ссылка, ссылка (1 и 2 арг). Это уже надо вызывать в amxmodx, иначе он не запишет себе эти плагины
+	if (!registerPlugin(pPlugin, error, pluginName))
+	{
+		// INFO: плагин не загрузился
+		return false;
+	}
+
+	return true;
+}
+
+bool CPluginMngr:: SearchPluginOtherFile(char* pluginName, int debugFlag)
+{
+	CStack<ke::AString *> files;
+	const char *configsDir = get_localinfo("amxx_configsdir", "addons/amxmodx/configs");
+	char path[255];
+
+#if defined WIN32
+	build_pathname_r(path, sizeof(path), "%s/*.ini", configsDir);
+	_finddata_t fd;
+	intptr_t handle = _findfirst(path, &fd);
+	const char* name = 
+
+	if (handle < 0)
+	{
+		return false;
+	}
+
+	while (!_findnext(handle, &fd))
+	{
+		const char* name = fd.name;
+		if (strncmp(name, "plugins-", 8) == 0)
+		{
+			ke::AString *pString = new ke::AString(name);
+			files.push(pString);
+		}
+	}
+
+	_findclose(handle);
+#elif defined(__linux__) || defined(__APPLE__)
+	build_pathname_r(path, sizeof(path), "%s/", configsDir);
+	struct dirent *ep;
+	DIR *dp;
+
+	if ((dp = opendir(path)) == NULL)
+	{
+		return false;
+	}
+
+	while ( (ep=readdir(dp)) != NULL )
+	{
+		const char* name = ep->d_name;
+		if (strncmp(name, "plugins-", 8) == 0) 
+		{
+			size_t len = strlen(name);
+			if (strcmp(&name[len-4], ".ini") == 0)
+			{
+				ke::AString *pString = new ke::AString(name);
+				files.push(pString);
+			}
+		}
+	}
+
+	closedir (dp);
+#endif
+
+	while (!files.empty())
+	{
+		ke::AString *pString = files.front();
+		ke::SafeSprintf(path, sizeof(path), "%s/%s",
+			configsDir,
+			pString->chars());
+
+		if (SearchPluginInFile(path, pluginName, debugFlag))
+		{
+			return true;
+		}
+
+		delete pString;
+		files.pop();
+	}
+
+	return false;
+}
+
+bool CPluginMngr::SearchPluginInFile(const char* filename, char* name, int debugFlag)
+{
+	char file[PLATFORM_MAX_PATH];
+	FILE *fp = fopen(build_pathname_r(file, sizeof(file), "%s", filename), "rt");
+
+	if (!fp)
+	{
+		return false;
+	}
+
+	char pluginName[256], debug[256], line[512];
+
+	while (!feof(fp))
+	{
+		pluginName[0] = '\0';
+		debug[0] = '\0';
+		line[0] = '\0';
+
+		fgets(line, sizeof(line), fp);
+
+
+		char *ptr = line;
+		while (*ptr)
+		{
+			if (*ptr == ';')
+			{
+				*ptr = '\0';
+			}
+			else 
+			{
+				ptr++;
+			}
+		}
+
+		sscanf(line, "%s %s", pluginName, debug);
+
+		if (!strcmp(pluginName, name))
+		{
+			continue;
+		}
+
+		if (isalnum(*debug) && !strcmp(debug, "debug"))
+		{
+			debugFlag = 1;
+		}
+
+		return true;
+	}
+
+	return false;
+}
+
+bool CPluginMngr::registerPlugin(CPlugin* pPlugin, char* error, char* pluginName)
+{
+	if (plugin->getStatusCode() == ps_bad_load)
+	{
+		char errorMsg[255];
+		sprintf(errorMsg, "%s (plugin \"%s\")", error, pluginName);
+		plugin->setError(errorMsg);
+		AMXXLOG_Error("[AMXX] %s", plugin->getError());
+		return true;
+	}
+	else
+	{
+		cell addr;
+		if (amx_FindPubVar(plugin->getAMX(), "MaxClients", &addr) != AMX_ERR_NOTFOUND)
+		{
+			*get_amxaddr(plugin->getAMX(), addr) = gpGlobals->maxClients;
+		}
+
+		if (amx_FindPubVar(plugin->getAMX(), "NULL_STRING", &addr) != AMX_ERR_NOTFOUND)
+		{
+			plugin->m_pNullStringOfs = get_amxaddr(plugin->getAMX(), addr);
+		}
+
+		if (amx_FindPubVar(plugin->getAMX(), "NULL_VECTOR", &addr) != AMX_ERR_NOTFOUND)
+		{
+			plugin->m_pNullVectorOfs = get_amxaddr(plugin->getAMX(), addr);
+		}
+	}
+
+	return false;
+}
+
 int CPluginMngr::loadPluginsFromFile(const char* filename, bool warn)
 {
 	char file[PLATFORM_MAX_PATH];
@@ -139,31 +338,7 @@ int CPluginMngr::loadPluginsFromFile(const char* filename, bool warn)
 
 		CPlugin* plugin = loadPlugin(pluginsDir, pluginName, error, sizeof(error), debugFlag);
 
-		if (plugin->getStatusCode() == ps_bad_load)
-		{
-			char errorMsg[255];
-			sprintf(errorMsg, "%s (plugin \"%s\")", error, pluginName);
-			plugin->setError(errorMsg);
-			AMXXLOG_Error("[AMXX] %s", plugin->getError());
-		}
-		else
-		{
-			cell addr;
-			if (amx_FindPubVar(plugin->getAMX(), "MaxClients", &addr) != AMX_ERR_NOTFOUND)
-			{
-				*get_amxaddr(plugin->getAMX(), addr) = gpGlobals->maxClients;
-			}
-
-			if (amx_FindPubVar(plugin->getAMX(), "NULL_STRING", &addr) != AMX_ERR_NOTFOUND)
-			{
-				plugin->m_pNullStringOfs = get_amxaddr(plugin->getAMX(), addr);
-			}
-
-			if (amx_FindPubVar(plugin->getAMX(), "NULL_VECTOR", &addr) != AMX_ERR_NOTFOUND)
-			{
-				plugin->m_pNullVectorOfs = get_amxaddr(plugin->getAMX(), addr);
-			}
-		}
+		registerPlugin(plugin, error, pluginName);
 	}
 
 	fclose(fp);

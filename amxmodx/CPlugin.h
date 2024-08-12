@@ -80,6 +80,7 @@ public:
 		inline const char* getAuthor() { return author.chars();}
 		inline const char* getError() { return errorMsg.chars();}
 		inline int getStatusCode() { return status; }
+		inline void* getCode() { return &code; }
 		inline int getId() const { return id; }
 		inline AMX* getAMX() { return &amx; }
 		inline const AMX* getAMX() const { return &amx; }
@@ -124,7 +125,12 @@ public:
 
 	CPlugin* loadPlugin(const char* path, const char* name, char* error, size_t maxLength, int debug);
 	void unloadPlugin(CPlugin** a);
+	void unloadPlugin(CPlugin* a);
+	bool reloadPlugin(CPlugin* a);
 	int loadPluginsFromFile(const char* filename, bool warn=true);
+	bool registerPlugin(CPlugin* a, char* error, char* pluginName);
+	bool SearchPluginInFile(const char* filename, char* name, int debugFlag);
+	bool SearchPluginOtherFile(char* pluginName, int debugFlag);
 	
 	inline CPlugin* findPluginFast(AMX *amx) { return (CPlugin*)(amx->userdata[UD_FINDPLUGIN]); }
 	CPlugin* findPlugin(AMX *amx);

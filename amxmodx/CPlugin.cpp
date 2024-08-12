@@ -38,6 +38,14 @@ void CPluginMngr::unloadPlugin(CPlugin** a)
 	--pCounter;
 }
 
+void CPluginMngr::unloadPlugin(CPlugin* a)
+{
+	CPlugin* next = a->next;
+	delete a;
+	a = next;
+	--pCounter;
+}
+
 void CPluginMngr::Finalize()
 {
 	if (m_Finalized)

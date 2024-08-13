@@ -71,12 +71,12 @@ void CPluginMngr::Finalize()
 bool CPluginMngr::reloadPlugin(CPlugin* a)
 {
 	char pluginName[256];
-	void* code = a->getCode();
+	//void* code = a->getCode();
 	AMX* amx = a->getAMX();
 	ke::SafeSprintf(pluginName, sizeof(pluginName), "%s", a->getName());
 	// очистка выделянной под плагин. опасно ли это? 
 	Log("--------unload_amxscript \"%s\" Start", pluginName);
-	int err = unload_amxscript(&amx, &code);//, &code);
+	int err = unload_amxscript(&amx, a->getCode());//, &code);
 	Log("--------unload_amxscript \"%s\" End", pluginName);
 	if (err != AMX_ERR_NONE);
 	{

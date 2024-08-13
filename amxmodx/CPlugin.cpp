@@ -74,38 +74,27 @@ bool CPluginMngr::reloadPlugin(CPlugin* a)
 	//AMX* amx = a->getAMX();
 	ke::SafeSprintf(pluginName, sizeof(pluginName), "%s", a->getName());
 	// очистка выделянной под плагин. опасно ли это? 
-	//Log("--------unload_amxscript Start");
 	int err = unload_amxscript(a->getAMX(), &code);//, &code);
-	//Log("--------unload_amxscript \"%s\" End", pluginName);
 	if (err != AMX_ERR_NONE);
 	{
 		//LogError(amx, AMX_ERR_NONE, "[AMXX] Plugin \"%s\" could not be unloaded from memory %i", pluginName, err);
 		// ошибка, не удалось выгрузить код плагина с памяти, но самого плагина нет
 	}
 	// выгружает плагин из нашего реестра
-	//Log("--------Unload \"%s\" Start", pluginName);
-	return true;
 	unloadPlugin(a);
-	//Log("--------Unload \"%s\" End", pluginName);
 	int debugFlag;
 
 	// проверка, что плагин активен в plugins.ini или других plugins-*.ini
-	//Log("--------Search \"%s\" Start", pluginName);
 	if (!SearchPluginInFile(get_localinfo("amxx_configsdir", "addons/amxmodx/configs/plugins.ini"), pluginName, debugFlag))
 	{
-		//Log("--------Search Other File \"%s\" Start", pluginName);
 		if (!SearchPluginOtherFile(pluginName, debugFlag))
 		{
-			//Log("--------Search \"%s\" Bad", pluginName);
 			// плагин не найден. Проверьте plugins.ini
 			return false;
 		}
 	}
-	//Log("--------Search \"%s\" End", pluginName);
 	char error[256];
-	//Log("--------Load \"%s\" Start", pluginName);
 	CPlugin* pPlugin = loadPlugin(get_localinfo("amxx_pluginsdir", "addons/amxmodx/plugins"), pluginName, error, sizeof(error), debugFlag);
-	//Log("--------Load \"%s\" End", pluginName);
 	// ссылка, ссылка (1 и 2 арг). Это уже надо вызывать в amxmodx, иначе он не запишет себе эти плагины
 	if (!registerPlugin(pPlugin, error, pluginName))
 	{

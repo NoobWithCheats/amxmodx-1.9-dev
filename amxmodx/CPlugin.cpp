@@ -75,7 +75,7 @@ bool CPluginMngr::reloadPlugin(CPlugin* a)
 	//AMX* amx = a->getAMX();
 	ke::SafeSprintf(pluginName, sizeof(pluginName), "%s", a->getName());
 	// очистка выделянной под плагин. опасно ли это? 
-	Log("--------unload_amxscript \"%s\" Start", pluginName);
+	Log("--------unload_amxscript Start");
 	int err = unload_amxscript(a->getAMX(), &code);//, &code);
 	Log("--------unload_amxscript \"%s\" End", pluginName);
 	if (err != AMX_ERR_NONE);

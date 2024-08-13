@@ -74,7 +74,7 @@ bool CPluginMngr::reloadPlugin(CPlugin* a)
 	AMX* amx = a->getAMX();
 	ke::SafeSprintf(pluginName, sizeof(pluginName), "%s", a->getName());
 	// если program (2-й арг) 0, то мы не освободим память, выделянную под плагин. опасно ли это? обновится ли наш плагин после этого?
-	int err = unload_amxscript(amx);//, &code);
+	int err = unload_amxscript(amx, 0);//, &code);
 	if (err != AMX_ERR_NONE); // TODO ссылка в ссылке. выгрузка плаигна с Сервера
 	{
 		LogError(amx, AMX_ERR_NONE, "[AMXX] Plugin \"%s\" could not be unloaded from memory %i", pluginName, err);

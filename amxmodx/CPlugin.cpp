@@ -69,6 +69,7 @@ void CPluginMngr::Finalize()
 
 bool CPluginMngr::reloadPlugin(CPlugin* a)
 {
+	
 	char pluginName[256];
 	void* code = a->getCode();
 	//AMX* amx = a->getAMX();
@@ -96,13 +97,20 @@ bool CPluginMngr::reloadPlugin(CPlugin* a)
 	char error[256];
 	CPlugin* pPlugin = loadPlugin(get_localinfo("amxx_pluginsdir", "addons/amxmodx/plugins"), pluginName, error, sizeof(error), debugFlag);
 	// ссылка, ссылка (1 и 2 арг). Это уже надо вызывать в amxmodx, иначе он не запишет себе эти плагины
-	if (!registerPlugin(pPlugin, error, pluginName))
+	if (registerPlugin(pPlugin, error, pluginName))
 	{
+		pNatives = BuildNativeTable();
+		amx_Register(pPlugin->getAMX(), pNatives, -1);
+		pPlugin->Finalize();
+		g_plugins.InvalidateCache();
+
 		// INFO: плагин не загрузился
-		return false;
+		return true;
 	}
 
-	return true;
+	// TODO: нужен ещё фунционал Finalize и InvalidateCache?
+
+	return false;
 }
 
 bool CPluginMngr:: SearchPluginOtherFile(char* pluginName, int debugFlag)

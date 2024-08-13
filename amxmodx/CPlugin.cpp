@@ -71,16 +71,16 @@ void CPluginMngr::Finalize()
 bool CPluginMngr::reloadPlugin(CPlugin* a)
 {
 	char pluginName[256];
-	//void* code = a->getCode();
-	AMX* amx = a->getAMX();
+	void* code = a->getCode();
+	//AMX* amx = a->getAMX();
 	ke::SafeSprintf(pluginName, sizeof(pluginName), "%s", a->getName());
 	// очистка выделянной под плагин. опасно ли это? 
 	Log("--------unload_amxscript \"%s\" Start", pluginName);
-	int err = unload_amxscript(&amx, a->getCode());//, &code);
+	int err = unload_amxscript(a->getAMX(), &code);//, &code);
 	Log("--------unload_amxscript \"%s\" End", pluginName);
 	if (err != AMX_ERR_NONE);
 	{
-		LogError(amx, AMX_ERR_NONE, "[AMXX] Plugin \"%s\" could not be unloaded from memory %i", pluginName, err);
+		//LogError(amx, AMX_ERR_NONE, "[AMXX] Plugin \"%s\" could not be unloaded from memory %i", pluginName, err);
 		// ошибка, не удалось выгрузить код плагина с памяти, но самого плагина нет
 	}
 	// выгружает плагин из нашего реестра

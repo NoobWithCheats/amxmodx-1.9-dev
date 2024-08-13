@@ -11,7 +11,6 @@
 #include "CPlugin.h"
 #include "CForward.h"
 #include "amx.h"
-#include "amxxlog.h"
 #include "natives.h"
 #include "debugger.h"
 #include "libraries.h"
@@ -75,7 +74,7 @@ bool CPluginMngr::reloadPlugin(CPlugin* a)
 	//AMX* amx = a->getAMX();
 	ke::SafeSprintf(pluginName, sizeof(pluginName), "%s", a->getName());
 	// очистка выделянной под плагин. опасно ли это? 
-	Log("--------unload_amxscript Start");
+	Log("unload_amxscript Start");
 	int err = unload_amxscript(a->getAMX(), &code);//, &code);
 	Log("--------unload_amxscript \"%s\" End", pluginName);
 	if (err != AMX_ERR_NONE);

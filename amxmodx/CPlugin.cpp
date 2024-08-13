@@ -70,7 +70,7 @@ void CPluginMngr::Finalize()
 bool CPluginMngr::reloadPlugin(CPlugin* a)
 {
 	char pluginName[256]; // TODO: надо записать, но функция получает только при const char
-	void* code = a->getCode();
+	//void* code = a->getCode();
 	AMX* amx = a->getAMX();
 	ke::SafeSprintf(pluginName, sizeof(pluginName), "%s", a->getName());
 	// если program (2-й арг) 0, то мы не освободим память, выделянную под плагин. опасно ли это? обновится ли наш плагин после этого?

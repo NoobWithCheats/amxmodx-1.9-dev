@@ -564,7 +564,7 @@ int unload_amxscript(AMX* amx, void** program)
 	int flags = amx->flags;
 	long code_size = amx->code_size;
 #endif
-
+	Log("--------unload_amxscript ^"%s^" start");
 	Debugger *pDebugger = (Debugger *)amx->userdata[UD_DEBUGGER];
 	if (pDebugger)
 		delete pDebugger;
@@ -581,6 +581,7 @@ int unload_amxscript(AMX* amx, void** program)
 	{
 		if (script->getAMX() == amx)
 		{
+			Log("--------unload_amxscript ^"%s^" remove");
 			g_loadedscripts.remove(script);
 			delete script;
 
@@ -592,16 +593,19 @@ int unload_amxscript(AMX* amx, void** program)
 
 	if (!prg)
 		return AMX_ERR_NONE;
-
+	Log("--------unload_amxscript ^"%s^" prg");
 #if defined JIT
 #if defined(__linux__) || defined(__APPLE__)
 	if ((flags & AMX_FLAG_JITC) != AMX_FLAG_JITC)
 	{
+		Log("--------unload_amxscript ^"%s^" delete prg");
 		delete [] prg;
 	} else {
 #ifdef __linux__
+		Log("--------unload_amxscript ^"%s^" munmap");
 		munmap(prg, code_size);
 #else
+		Log("--------unload_amxscript ^"%s^" free");
 #ifdef free
 #undef free
 		free(prg);
@@ -624,6 +628,7 @@ int unload_amxscript(AMX* amx, void** program)
 	}
 #endif //OS support
 #else
+	Log("--------unload_amxscript ^"%s^" delete normally");
 	//delete normally
 	delete [] prg;
 #endif
